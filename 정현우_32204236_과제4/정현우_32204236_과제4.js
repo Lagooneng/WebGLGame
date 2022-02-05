@@ -230,7 +230,7 @@ window.onload = function init() {
 
 
 // 코드리뷰 : 이벤트와 로직은 별도 분리해서 처리하는게 확장성에서 유리. UI 컨트롤러가 있는 경우 클릭시에도 해당 로직을 사용할 수 있음
-// 예. window.onkeydown = moveUserHandler();
+// 예. window.onkeydown = moveUserHandler(); 함수 구현부 생략 
 
 window.onkeydown = function(event) {
 	if (event.key === 'd' && currentUserX + 0.5 < bottomWidth * 0.5) {
