@@ -1,10 +1,39 @@
+/**
+ *
+ * 리뷰어 : 정채윤 2022.02.05
+ *
+ * -- 코드 관점 포인트 요약 -----
+ * 
+ * 첫째 포인트 : 변수명과 함수명만 보고도 프로그래밍 의도를 파악할 수 있어야 함.
+ *		1. 변수명은 명사로 시작하는 단어 조합 사용( 예. user, catEnemy, dogEnemy, bossEnemy ) ***
+ *		2. 함수명은 동사로 시작하는 단어 조합 사용( 예. moveUser, attackEnumy ) ***
+ 
+ * 두번째 포인트 : 조건문 사용방법
+ *		1. 들여쓰기 최소화( 복잡도 증가 방지 )
+ *		2. 복잡한 조건의 경우 함수로 분리하여 의미를 쉽게 파악할 수 있는 이름을 부여하라.
+ *		3. 중복 조건을 제거하라.
+ *		4. 조건문을 사용하기 전에 객체를 사용할 수 있는지 선 검토하라. ***
+ *		   ( 예. Factory 메서드의 키값을 받아서 if, switch 문으로 분기처리 하는 대신 객체의 키/밸류로 제어 )
+ *
+ * 세번째 포인트 : 함수, 객체는 하나의 기능만 담당
+ *		1. 함수는 입력받은 값은 항상 똑같은 값을 반환하도록 작성( 데이터 불변성 )
+ * 		2. 인자 갯수는 4개 이상을 넘기지 않는게 좋으며, 넘어갈 경우 객체를 사용 권장.
+ */
+
 var canvas;
 var gl;
 var points = [];
 var normals = [];
+
+// 코드리뷰 : texCoords -> textureCoords 이름은 의미 파악이 쉽고, 식별이 용이한 단어 사용( text 와 혼동 )
 var texCoords = [];
+
+// 코드리뷰 : Webgl 에서 사용하는 useProgram() 메서드의 인자값인 것 같은데 그림자 효과 관련 객체라면 shaderProgram 과 같이 더 구체적인 표현이 좋을 듯 함.
 var program;
+
+// 코드리뷰 : 반복되는 네이티브 메서드의 참조값은 map( 키, 밸류 ) 형태를 가진 객체로 관리하는게 더 효율적일 것 같음.
 var interval1, interval2, interval3;
+
 // lookAt() 관련 변수
 var eye = vec3(0.0, 7.0, 6.0);
 // 모델-뷰 행렬, 투영 행렬
@@ -58,7 +87,10 @@ var comWidth = 1.0;
 var numNodes = 5;
 
 var figure = [];
-for( var i=0; i<numNodes; i++) figure[i] = createNode(null, null, null);
+
+// 코드리뷰 : 조건문, 반복문 등 구현부가 한줄인 경우 블럭 또는 줄바꿈 들여쓰기 사용( 회사 코딩컨벤션 마다 좀 다름 )
+for( var i=0; i<numNodes; i++)
+	figure[i] = createNode(null, null, null);
 
 // 정점 정보
 var vertices = [
@@ -81,35 +113,49 @@ var texCoord = [
 	vec2(1, 1),
 	vec2(1, 0)
 ];
+
+// 코드리뷰 : image와 같이 일반적인 단어 보다 tileImageByFloat32 또는 chessboardByFloat32 구체적인 이름 사용 
 var image1 = new Array()
+
+// 코드리뷰 : 데이터 생성 초기화
 for (var i =0; i<texSize; i++)  
 	image1[i] = new Array();
-for (var i =0; i<texSize; i++)
-   for ( var j = 0; j < texSize; j++)
-      image1[i][j] = new Float32Array(4);
-      for (var i =0; i<texSize; i++) 
+
+	for ( var j = 0; j < texSize; j++)
+      		image1[i][j] = new Float32Array(4);
+
+// 코드리뷰 : 데이터 갱신 로직 분리
+for (var i =0; i<texSize; i++) {
       	for (var j=0; j<texSize; j++) {
          	var c = (((i & 0x8) == 0) ^ ((j & 0x8)  == 0));
+		
+		// 변수 선언 마지막 다음 로직은 2칸 줄바꿈( 가독성 향상 )
          	image1[i][j] = [c, c, c, 1];
       	}
+}
 
+// 코드리뷰 : image와 같이 일반적인 단어 보다 tileImageByUnit8 또는 chessboardByUnit3 구체적인 이름 사용 
 var image2 = new Uint8Array(4*texSize*texSize);
-   for ( var i = 0; i < texSize; i++ )
-      for ( var j = 0; j < texSize; j++ )
-        	for(var k =0; k<4; k++)
-            image2[4*texSize*i+4*j+k] = 255*image1[i][j][k];
+
+for ( var i = 0; i < texSize; i++ )
+	for ( var j = 0; j < texSize; j++ )
+		for(var k =0; k<4; k++)
+			image2[4*texSize*i+4*j+k] = 255*image1[i][j][k];
 
 // 시작
 window.onload = function init() {
 	canvas = document.getElementById('gl-canvas');
 	gl = WebGLUtils.setupWebGL( canvas );
-   if ( !gl ) { alert( "WebGL isn't available" ); }
-   cube();
+	
+	// 줄바꿈
+	if ( !gl ) 
+		alert( "WebGL isn't available" );
+	
+	cube();
 
-   gl.viewport( 0, 0, canvas.width, canvas.height );
-   gl.clearColor( 1, 1, 1, 1 );
-
-   gl.enable(gl.DEPTH_TEST)
+	gl.viewport( 0, 0, canvas.width, canvas.height );
+	gl.clearColor( 1, 1, 1, 1 );
+	gl.enable(gl.DEPTH_TEST)
     
    program = initShaders( gl, "vertex-shader", "fragment-shader" );
    gl.useProgram( program );
@@ -117,29 +163,27 @@ window.onload = function init() {
    ambientProduct = mult(lightAmbient, materialAmbient);
    diffuseProduct = mult(lightDiffuse, materialDiffuse);
    specularProduct = mult(lightSpecular, materialSpecular);
+	
+	// 코드리뷰 : 변수명은 기능을 표현할 수 있는 더 구체적인 이름 사용해야 할 듯( 리터럴 함수는 별도 분리 필요 )
+	var setBuffer = function(points) {
+		gl.bindBuffer( gl.ARRAY_BUFFER, gl.createBuffer());
+		gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
+	};
+	
+	var setPosition = function(pointerIndex, locationItem, locationId) {
+		var position = gl.getAttribLocation( locationItem, locationId );
+		gl.vertexAttribPointer( position, pointerIndex, gl.FLOAT, false, 0, 0 );
+		gl.enableVertexAttribArray( position );
+	};
 
-   var vBuffer = gl.createBuffer();
-   gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
-   gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
-   var vPosition = gl.getAttribLocation( program, "vPosition" );
-   gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
-   gl.enableVertexAttribArray( vPosition );
-
-
-   var nBuffer = gl.createBuffer();
-   gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
-   gl.bufferData( gl.ARRAY_BUFFER, flatten(normals), gl.STATIC_DRAW );
-   var vNormal = gl.getAttribLocation( program, "vNormal" );
-   gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
-   gl.enableVertexAttribArray( vNormal );
-
-
-   var tBuffer = gl.createBuffer();
-   gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer);
-   gl.bufferData( gl.ARRAY_BUFFER, flatten(texCoords), gl.STATIC_DRAW );
-   var vTexCoord = gl.getAttribLocation( program, "vTexCoord");
-   gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, false, 0, 0);
-   gl.enableVertexAttribArray(vTexCoord);
+   	setBuffer(points);
+	setPosition(4, program, 'vPosition');
+	
+	setBuffer(normals);
+	setPosition(4, program, 'vNormal');
+	
+	setBuffer(texCoords);
+	setPosition(2, program, 'vTexCoord');
 
 
    modelViewMatrixLoc = gl.getUniformLocation( program, "modelViewMatrix" );
@@ -184,6 +228,10 @@ window.onload = function init() {
 
 }
 
+
+// 코드리뷰 : 이벤트와 로직은 별도 분리해서 처리하는게 확장성에서 유리. UI 컨트롤러가 있는 경우 클릭시에도 해당 로직을 사용할 수 있음
+// 예. window.onkeydown = moveUserHandler(); 함수 구현부 생략 
+
 window.onkeydown = function(event) {
 	if (event.key === 'd' && currentUserX + 0.5 < bottomWidth * 0.5) {
 		currentUserX = currentUserX + 0.5;
@@ -196,28 +244,38 @@ window.onkeydown = function(event) {
 	}
 }
 
+// 코드리뷰 : stopGame 동사 + 명사 형태의 이름 사용 
 function gameStop() {
 	var userPos = vec2(currentUserX + userWidth * 0.5, currentUserZ + userWidth * 0.5);
 	var com1Pos = vec2(currentCom1X + comWidth * 0.5, currentCom1Z + comWidth * 0.5);
 	var com2Pos = vec2(currentCom2X + comWidth * 0.5, currentCom2Z + comWidth * 0.5);
 	var com3Pos = vec2(currentCom3X + comWidth * 0.5, currentCom3Z + comWidth * 0.5);
 
-	if ( (userPos[0] - com1Pos[0])*(userPos[0] - com1Pos[0]) + 
-		(userPos[1] - com1Pos[1])*(userPos[1] - com1Pos[1]) < 1 ) {
+	// 코드리뷰 : 다른 함수에서도 사용할 수 있으므로 리터럴 함수 보다 별도 함수로 분리해서 사용 
+	var isHit = function(userPos, enermyPos) {
+		return userPos[0] - com1Pos[0])*(userPos - enermyPos[0]) + 
+			(userPos[1] - enermyPos[1])*(userPos[1] - enermyPos[1]) < 1;
+	}
+	
+	// 코드리뷰 : 복잡한 조건식은 함수로 분리
+	if (isHit(userPos, com1Pos)) {
+		// 코드리뷰 : 아래 인터벌 구문도 stopRender() 함수를 만들어 한곳에서 제어하는게 좋을 듯.
 		clearInterval(interval1);
 		clearInterval(interval2);
 		clearInterval(interval3);
 		return true;
 	}
-	if ( (userPos[0] - com2Pos[0])*(userPos[0] - com2Pos[0]) + 
-		(userPos[1] - com2Pos[1])*(userPos[1] - com2Pos[1]) < 1 ) {
+	
+	if (isHit(userPos, com2Pos)) {
+		// 코드리뷰 : 아래 인터벌 구문도 stopRender() 함수를 만들어 한곳에서 제어하는게 좋을 듯.
 		clearInterval(interval1);
 		clearInterval(interval2);
 		clearInterval(interval3);
 		return true;
 	}
-	if ( (userPos[0] - com3Pos[0])*(userPos[0] - com3Pos[0]) + 
-		(userPos[1] - com3Pos[1])*(userPos[1] - com3Pos[1]) < 1 ) {
+	
+	if (isHit(userPos, com3Pos)) {
+		// 코드리뷰 : 아래 인터벌 구문도 stopRender() 함수를 만들어 한곳에서 제어하는게 좋을 듯.
 		clearInterval(interval1);
 		clearInterval(interval2);
 		clearInterval(interval3);
@@ -291,28 +349,22 @@ function createNode(render, sibling, child){
    return node;
 }
 
-function initNodes(Id) {
-	switch(Id) {
-		case bottomId:
-		figure[bottomId] = createNode( bottom, userId, null );
-		break;
-
-		case userId:
-	   figure[userId] = createNode( user, null, com1Id );
-	   break;
-
-	   case com1Id:
-	   figure[com1Id] = createNode( com1, null, com2Id );
-	   break;
-
-	   case com2Id:
-	   figure[com2Id] = createNode( com2, null, com3Id );
-	   break;
-
-	   case com3Id:
-	   figure[com3Id] = createNode( com3, null, null );
-	   break;
-	}
+function initNodes(id) {
+	
+	// 코드리뷰 : 조건문 사용 전 객체를 활용할 수 있는지 검토
+	var nodesData = {
+		[bottomId]: {item: bottom, userId: userId, comId: null},
+		[userId]: {item: user, userId: null, comId: com1Id},
+		[com1Id]: {item: bottom, userId: null, comId: com2Id},
+		[com2Id]: {item: bottom, userId: null, comId: com3Id},
+		[com3Id]: {item: bottom, userId: null, comId: null},
+	};
+	
+	// 코드리뷰 : 객체를 사용할 때는 반드시 유효성 검증이 필요
+	if (!nodesData[id]) {
+		return;
+		
+	figure[id] = createNode( nodesData[id].item, nodesData[id].userId, nodesData[id].comId );
 }
 
 function traverse(Id) {
@@ -350,6 +402,7 @@ function user() {
    for(var i =0; i < 6; i++) gl.drawArrays(gl.TRIANGLE_FAN, 4*i, 4);
 }
 
+	// 코드리뷰 : com1 보다는 좀 더 적의 특징을 표현할 수 있는 구체적인 이름이 좋을 듯 BallEnermy,
 function com1() {
 	lightAmbient = vec4(1.0, 0.0, 0.56, 1.0 );
 	ambientProduct = mult(lightAmbient, materialAmbient);
@@ -393,53 +446,55 @@ function com3() {
 }
 
 // 유저의 x + 2 y - 2 위치를 쫒아가는 움직임
+function getChangedDistance() {
+	return (currentUserX + 2 - (currentCom1X + 0.5))*(currentUserX + 2 - (currentCom1X + 0.5)) + 
+		(currentUserZ - 2 - currentCom1Z)*(currentUserZ - 2 - currentCom1Z);
+}
+	
+	// 코드리뷰 : 사선 움직임이라면 moveEnermyDiagonally가 적합할 듯 함.
 function comMove1() {
 	// 0 동 1 서 2 남 3 북
-	var idx;
+	
+	// idx 변수는 좌표만 구하면 되니 필요없을 듯 함.
+	// var idx;
 	var distance = 1000;
+	
+	// 매 렌더링 될 때 마다 거리값을 가져옴 
+	var temp = getChangedDistance();
+	
 	// 동
-	var temp = (currentUserX + 2 - (currentCom1X + 0.5))*(currentUserX + 2 - (currentCom1X + 0.5)) +  
-		(currentUserZ - 2 - currentCom1Z)*(currentUserZ - 2 - currentCom1Z);
 	if ( currentCom1X + 0.5 < bottomWidth * 0.5) {
 		distance = temp;
-		idx = 0;
+		currentCom1X +=  0.5;
 	}
 
 	// 서
-	temp = (currentUserX + 2 - (currentCom1X - 0.5))*(currentUserX + 2 - (currentCom1X - 0.5)) +  
-		(currentUserZ - 2 - currentCom1Z)*(currentUserZ - 2 - currentCom1Z);
+	temp = getChangedDistance();
+	
 	if ( distance > temp && currentCom1X - 0.5 > -bottomWidth * 0.5 ) {
 		distance = temp;
-		idx = 1;
+		currentCom1X -= 0.5;
 	}
 
 	// 남
-	temp = (currentUserX + 2 - currentCom1X)*(currentUserX + 2 - currentCom1X) +  
-		(currentUserZ - 2 - (currentCom1Z + 0.5))*(currentUserZ - 2 - (currentCom1Z + 0.5));
+	temp = getChangedDistance();
+	
 	if ( distance > temp && currentCom1Z + 0.5 < bottomWidth * 0.5) {
 		distance = temp;
-		idx = 2;
+		currentCom1Z += 0.5;
 	}
 
 	// 북
-	temp = (currentUserX + 2 - currentCom1X)*(currentUserX + 2 - currentCom1X) +  
-		(currentUserZ - 2  - (currentCom1Z - 0.5))*(currentUserZ - 2 - (currentCom1Z - 0.5));
+	temp = getChangedDistance();
+	
 	if ( distance > temp && currentCom1Z - 0.5 > -bottomWidth * 0.5 ) {
-		idx = 3;
-	}
-
-	if (idx === 0) {
-		currentCom1X = currentCom1X + 0.5;
-	} else if (idx === 1) {
-		currentCom1X = currentCom1X - 0.5;
-	} else if (idx === 2) {
-		currentCom1Z = currentCom1Z + 0.5;
-	} else {
-		currentCom1Z = currentCom1Z - 0.5;
+		currentCom1Z -= 0.5;
 	}
 }
 
 // 유저를 정확히 쫓아 가는 움직임
+	
+	// 코드리뷰 : 직선 움직임이라면 moveEnermyStraight가 적합할 듯 함.
 function comMove2() {
 	// 0 동 1 서 2 남 3 북
 	var idx;
